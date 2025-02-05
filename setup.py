@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import List, Union
 
 import setuptools
-from get_pypi_latest_version import GetPyPiLatestVersion
 from setuptools import find_namespace_packages
 
 
@@ -26,11 +25,7 @@ def get_readme() -> str:
 
 MODULE_NAME = "process_formula"
 
-obtainer = GetPyPiLatestVersion()
-try:
-    latest_version = obtainer(MODULE_NAME)
-except ValueError:
-    latest_version = "0.0.0"
+latest_version = "0.0.0"
 
 VERSION_NUM = obtainer.version_add_one(latest_version)
 
