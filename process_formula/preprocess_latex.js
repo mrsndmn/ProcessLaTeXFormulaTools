@@ -1,5 +1,5 @@
 
-var katex = require(import.meta.filename.replace('preprocess_latex.js', '') + 'third-party/katex/dist/katex.js')
+var katex = require('./third-party/katex/katex_dist/katex.js')
 
 var readline = require('readline');
 
