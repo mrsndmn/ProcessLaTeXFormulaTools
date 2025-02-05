@@ -29,6 +29,9 @@ latest_version = "0.0.0"
 
 VERSION_NUM = latest_version
 
+packages = find_namespace_packages()
+print("install packages", packages)
+
 setuptools.setup(
     name=MODULE_NAME,
     version=VERSION_NUM,
@@ -42,8 +45,8 @@ setuptools.setup(
     license="MIT",
     include_package_data=True,
     install_requires=read_txt("requirements.txt"),
-    package_dir={"": MODULE_NAME},
-    packages=find_namespace_packages(where=MODULE_NAME),
+    package_dir={"process_formula": "process_formula"},
+    packages=packages,
     package_data={"": ["*.js", "*.json", "*.txt", "*.md"]},
     keywords=["formula,KaTeX,LaTeX,im2markup"],
     classifiers=[

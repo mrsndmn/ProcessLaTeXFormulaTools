@@ -1,5 +1,5 @@
 
-var katex = require("./node_modules/katex/dist/katex.js")
+var katex = require("./third-party/katex/dist/katex.js")
 
 var readline = require('readline');
 
