@@ -38,7 +38,6 @@ rl.on('line', function(line){
     // norm_str is normalized version build by renderer below.
     try {
 
-
         if (process.argv[2] == "tokenize") {
             var tree = katex.__parse(line, {throwOnError: true});
             console.log(global_str.replace(/\\label { .*? }/, ""));
@@ -94,7 +93,7 @@ groupTypes.mathord = function(group, options) {
             }
         }
     } else {
-        norm_str = norm_str + group.text + "";
+        norm_str = norm_str + group.text + " ";
     }
 };
 
