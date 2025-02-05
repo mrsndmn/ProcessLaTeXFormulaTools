@@ -1,6 +1,8 @@
-var katex = require("./third_party/katex/katex.js")
-options = require("./third_party/katex/src/Options.js")
+
+var katex = require("./node_modules/katex/dist/katex.js")
+
 var readline = require('readline');
+
 var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -31,27 +33,35 @@ rl.on('line', function(line){
     }
 
 
-    line = line + " "
+    line = line
     // global_str is tokenized version (build in parser.js)
     // norm_str is normalized version build by renderer below.
     try {
 
 
         if (process.argv[2] == "tokenize") {
-            var tree = katex.__parse(line, {});
+            var tree = katex.__parse(line, {throwOnError: true});
             console.log(global_str.replace(/\\label { .*? }/, ""));
         } else {
             for (var i = 0; i < 300; ++i) {
                 line = line.replace(/{\\rm/, "\\mathrm{");
                 line = line.replace(/{ \\rm/, "\\mathrm{");
                 line = line.replace(/\\rm{/, "\\mathrm{");
+                if (line.indexOf("{\\rm")==-1 && line.indexOf("{ \\rm")==-1 && line.indexOf("\\rm{")==-1 ) {
+                    break;
+                }
             }
 
-            var tree = katex.__parse(line, {});
-            buildExpression(tree, new options({}));
+            var tree = katex.__parse(line, {throwOnError: true});
+            // console.log("tree", tree)
+            buildExpression(tree, {});
             for (var i = 0; i < 300; ++i) {
                 norm_str = norm_str.replace('SSSSSS', '$');
                 norm_str = norm_str.replace(' S S S S S S', '$');
+                norm_str = norm_str.replace('{ \\@not } =', '\\neq');
+                if (line.indexOf("SSSSSS")==-1 && line.indexOf(" S S S S S S")==-1 && line.indexOf("{ \\@not } =")==-1 ) {
+                    break;
+                }
             }
             console.log(norm_str.replace(/\\label { .*? }/, ""));
         }
@@ -63,145 +73,165 @@ rl.on('line', function(line){
     }
     global_str = ""
     norm_str = ""
+    prev_end = 0
 })
 
 
 
 // This is a LaTeX AST to LaTeX Renderer (modified version of KaTeX AST-> MathML).
 norm_str = ""
+prev_end = 0
 
 var groupTypes = {};
 
 groupTypes.mathord = function(group, options) {
     if (options.font == "mathrm"){
-        for (i = 0; i < group.value.length; ++i ) {
-            if (group.value[i] == " ") {
-                norm_str = norm_str + group.value[i] + "\; ";
+        for (i = 0; i < group.length; ++i ) {
+            if (group.text[i] == " ") {
+                norm_str = norm_str + group.text[i] + "\; ";
             } else {
-                norm_str = norm_str + group.value[i] + " ";
+                norm_str = norm_str + group.text[i];
             }
         }
     } else {
-        norm_str = norm_str + group.value + " ";
+        norm_str = norm_str + group.text + "";
     }
 };
 
 groupTypes.textord = function(group, options) {
-    norm_str = norm_str + group.value + " ";
+    norm_str = norm_str + group.text;
 };
 
+groupTypes.htmlmathml = function(group, options) {
+    buildExpression(group.html)
+};
+
+
 groupTypes.bin = function(group) {
-    norm_str = norm_str + group.value + " ";
+    norm_str = norm_str + group.text;
 };
 
 groupTypes.rel = function(group) {
-    norm_str = norm_str + group.value + " ";
+    norm_str = norm_str + group.text;
 };
 
 groupTypes.open = function(group) {
-    norm_str = norm_str + group.value + " ";
+    norm_str = norm_str + group.text;
 };
 
 groupTypes.close = function(group) {
-    norm_str = norm_str + group.value + " ";
+    norm_str = norm_str + group.text;
 };
 
 groupTypes.inner = function(group) {
-    norm_str = norm_str + group.value + " ";
+    norm_str = norm_str + group.text;
 };
 
 groupTypes.punct = function(group) {
-    norm_str = norm_str + group.value + " ";
+    norm_str = norm_str + group.text;
 };
 
 groupTypes.ordgroup = function(group, options) {
-    norm_str = norm_str + "{ ";
+    norm_str = norm_str + "{";
 
-    buildExpression(group.value, options);
+    buildExpression(group.body, options);
 
-    norm_str = norm_str +  "} ";
+    norm_str = norm_str +  "}";
 };
 
 groupTypes.text = function(group, options) {
 
-    norm_str = norm_str + "\\mathrm { ";
+    norm_str = norm_str + "\\mathrm {";
 
-    buildExpression(group.value.body, options);
-    norm_str = norm_str + "} ";
+    buildExpression(group.body, options);
+    norm_str = norm_str + "}";
 };
 
+groupTypes.atom = function(group, options) {
+    var atom_text = group.text;
+    // if (atom_text === '\\@not') {
+    //     atom_text = '\\neq'
+    // }
+    norm_str = norm_str + atom_text + " ";
+};
+
+groupTypes.kern = function(group, options) {
+    // norm_str = norm_str + " \\hspace{" + group.dimension.number + group.dimension.unit + "}";
+};
+
+
 groupTypes.color = function(group, options) {
-    var inner = buildExpression(group.value.value, options);
+    buildExpression(group.body, options);
 
-    var node = new mathMLTree.MathNode("mstyle", inner);
+    // var node = new mathMLTree.MathNode("mstyle", inner);
 
-    node.setAttribute("mathcolor", group.value.color);
+    // node.setAttribute("mathcolor", group.color);
 
-    return node;
+    // return node;
 };
 
 groupTypes.supsub = function(group, options) {
-    buildGroup(group.value.base, options);
+    buildGroup(group.base, options);
 
-    if (group.value.sub) {
-        norm_str = norm_str + "_ ";
-        if (group.value.sub.type != 'ordgroup') {
-            norm_str = norm_str + " { ";
-            buildGroup(group.value.sub, options);
-            norm_str = norm_str + "} ";
+    if (group.sub) {
+        norm_str = norm_str + "_";
+        if (group.sub.type != 'ordgroup') {
+            norm_str = norm_str + "{";
+            buildGroup(group.sub, options);
+            norm_str = norm_str + "}";
         } else {
-            buildGroup(group.value.sub, options);
+            buildGroup(group.sub, options);
         }
 
     }
 
-    if (group.value.sup) {
-        norm_str = norm_str + "^ ";
-        if (group.value.sup.type != 'ordgroup') {
-            norm_str = norm_str + " { ";
-            buildGroup(group.value.sup, options);
-            norm_str = norm_str + "} ";
+    if (group.sup) {
+        norm_str = norm_str + "^";
+        if (group.sup.type != 'ordgroup') {
+            norm_str = norm_str + "{";
+            buildGroup(group.sup, options);
+            norm_str = norm_str + "}";
         } else {
-            buildGroup(group.value.sup, options);
+            buildGroup(group.sup, options);
         }
     }
 
 };
 
 groupTypes.genfrac = function(group, options) {
-    if (!group.value.hasBarLine) {
+    if (!group.hasBarLine) {
         norm_str = norm_str + "\\binom ";
     } else {
         norm_str = norm_str + "\\frac ";
     }
-    buildGroup(group.value.numer, options);
-    buildGroup(group.value.denom, options);
+    buildGroup(group.numer, options);
+    buildGroup(group.denom, options);
 
 };
 
 groupTypes.array = function(group, options) {
-    norm_str = norm_str + "\\begin{" + group.value.style + "} ";
+    norm_str = norm_str + "\\begin{" + group.style + "}";
 
-    if (group.value.style == "array" || group.value.style == "tabular") {
-        norm_str = norm_str + "{ ";
-        if (group.value.cols) {
-            group.value.cols.map(function(start) {
+    if (group.style == "array" || group.style == "tabular") {
+        norm_str = norm_str + "{";
+        if (group.cols) {
+            group.cols.map(function(start) {
                 if (start) {
                     if (start.type == "align") {
-                        norm_str = norm_str + start.align + " ";
+                        norm_str = norm_str + start.align;
                     } else if (start.type == "separator") {
-                        norm_str = norm_str + start.separator + " ";
+                        norm_str = norm_str + start.separator;
                     }
                 }
             });
         } else {
-            group.value.body[0].map(function(start) {
+            group.body[0].map(function(start) {
                 norm_str = norm_str + "c ";
             } );
         }
-        norm_str = norm_str + "} ";
+        norm_str = norm_str + "}";
     }
-    group.value.body.map(function(row) {
+    group.body.map(function(row) {
         if (row.length > 1 || row[0].value.length > 0) {
             if (row[0].value[0] && row[0].value[0].value == "\\hline") {
                 norm_str = norm_str + "\\hline ";
@@ -214,17 +244,17 @@ groupTypes.array = function(group, options) {
             norm_str = norm_str.substring(0, norm_str.length-2) + "\\\\ ";
         }
     });
-    norm_str = norm_str + "\\end{" + group.value.style + "} ";
+    norm_str = norm_str + "\\end{" + group.style + "}";
 };
 
 groupTypes.sqrt = function(group, options) {
     var node;
-    if (group.value.index) {
-        norm_str = norm_str + "\\sqrt [ " + group.value.index + " ] ";
-        buildGroup(group.value.body, options);
+    if (group.index) {
+        norm_str = norm_str + "\\sqrt [" + group.index + "]";
+        buildGroup(group.body, options);
     } else {
         norm_str = norm_str + "\\sqrt ";
-        buildGroup(group.value.body, options);
+        buildGroup(group.body, options);
     }
 };
 
@@ -232,52 +262,52 @@ groupTypes.leftright = function(group, options) {
 
 
 
-    norm_str = norm_str + "\\left" + group.value.left + " ";
-    buildExpression(group.value.body, options);
-    norm_str = norm_str + "\\right" + group.value.right + " ";
+    norm_str = norm_str + "\\left" + group.left;
+    buildExpression(group.body, options);
+    norm_str = norm_str + "\\right" + group.right;
 };
 
 groupTypes.accent = function(group, options) {
-    if (group.value.base.type != 'ordgroup') {
-        norm_str = norm_str + group.value.accent + " { ";
-        buildGroup(group.value.base, options);
-        norm_str = norm_str + "} ";
+    if (group.base.type != 'ordgroup') {
+        norm_str = norm_str + group.label + "{";
+        buildGroup(group.base, options);
+        norm_str = norm_str + "}";
     } else {
-        norm_str = norm_str + group.value.accent + " ";
-        buildGroup(group.value.base, options);
+        norm_str = norm_str + group.label;
+        buildGroup(group.base, options);
     }
 };
 
 groupTypes.spacing = function(group) {
     var node;
-    if (group.value == " ") {
+    if (group.text == " ") {
         norm_str = norm_str + "~ ";
     } else {
-        norm_str = norm_str + group.value + " ";
+        norm_str = norm_str + group.text;
     }
     return node;
 };
 
-groupTypes.op = function(group) {
-    var node;
-
-    // TODO(emily): handle big operators using the `largeop` attribute
-
-
-    if (group.value.symbol) {
-        // This is a symbol. Just add the symbol.
-        norm_str = norm_str + group.value.body + " ";
-
+groupTypes.op = function(group, options) {
+    if (typeof(group.name) !== 'undefined') {
+        norm_str = norm_str + group.name + " ";
     } else {
-        if (group.value.limits == false) {
-            norm_str = norm_str + "\\\operatorname { ";
-        } else {
-            norm_str = norm_str + "\\\operatorname* { ";
+        buildExpression(group.body, options)
+    }
+};
+
+groupTypes.operatorname = function(group, options) {
+    norm_str = norm_str + "\\"
+    for (var i = 0; i < group.body.length; i++) {
+        var group_i = group.body[i];
+        if (group_i.type === 'kern') {
+            continue
         }
-        for (i = 1; i < group.value.body.length; ++i ) {
-            norm_str = norm_str + group.value.body[i] + " ";
+        // console.log("group_i", group_i)
+        if ('loc' in group_i) {
+            prev_end = group_i.loc.start
         }
-        norm_str = norm_str + "} ";
+        buildGroup(group_i, options);
     }
 };
 
@@ -288,78 +318,85 @@ groupTypes.katex = function(group) {
     return node;
 };
 
+groupTypes.mclass = function(group, options) {
+    buildExpression(group.body, options)
+};
+
+groupTypes.lap = function(group, options) {
+    buildGroup(group.body, options)
+};
 
 
 groupTypes.font = function(group, options) {
-    var font = group.value.font;
+    var font = group.font;
     if (font == "mbox" || font == "hbox") {
         font = "mathrm";
     }
-    norm_str = norm_str + "\\" + font + " ";
-    buildGroup(group.value.body, options.withFont(font));
+    norm_str = norm_str + "\\" + font;
+    buildGroup(group.body, options);
 };
 
 groupTypes.delimsizing = function(group) {
     var children = [];
-    norm_str = norm_str + group.value.funcName + " " + group.value.value + " ";
+    norm_str = norm_str + group.delim;
 };
 
 groupTypes.styling = function(group, options) {
-    norm_str = norm_str + " " + group.value.original + " ";
-    buildExpression(group.value.value, options);
+    norm_str = norm_str + group.original;
+    buildExpression(group.value, options);
 
 };
 
 groupTypes.sizing = function(group, options) {
 
-    if (group.value.original == "\\rm") {
-        norm_str = norm_str + "\\mathrm { ";
-        buildExpression(group.value.value, options.withFont("mathrm"));
-        norm_str = norm_str + "} ";
+    if (group.original == "\\rm") {
+        norm_str = norm_str + "\\mathrm {";
+        buildExpression(group.value, options);
+        norm_str = norm_str + "}";
     } else {
-        norm_str = norm_str + " " + group.value.original + " ";
-        buildExpression(group.value.value, options);
+        norm_str = norm_str + group.original;
+        buildExpression(group.value, options);
     }
 };
 
 groupTypes.overline = function(group, options) {
-    norm_str = norm_str + "\\overline { ";
+    norm_str = norm_str + "\\overline {";
 
-    buildGroup(group.value.body, options);
-    norm_str = norm_str + "} ";
+    buildGroup(group.body, options);
+    norm_str = norm_str + "}";
     norm_str = norm_str;
 
 };
 
 groupTypes.underline = function(group, options) {
-    norm_str = norm_str + "\\underline { ";
-    buildGroup(group.value.body, options);
-    norm_str = norm_str + "} ";
+    norm_str = norm_str + "\\underline {";
+    buildGroup(group.body, options);
+    norm_str = norm_str + "}";
 
     norm_str = norm_str;
 
 };
 
 groupTypes.rule = function(group) {
-    norm_str = norm_str + "\\rule { "+group.value.width.number+" "+group.value.width.unit+"  } { "+group.value.height.number+" "+group.value.height.unit+ " } ";
+    norm_str = norm_str + "\\rule { "+group.width.number+" "+group.width.unit+"  } { "+group.height.number+" "+group.height.unit+ " } ";
 
 };
 
 groupTypes.llap = function(group, options) {
     norm_str = norm_str + "\\llap ";
-    buildGroup(group.value.body, options);
+    buildGroup(group.body, options);
 };
 
 groupTypes.rlap = function(group, options) {
     norm_str = norm_str + "\\rlap ";
-    buildGroup(group.value.body, options);
+    buildGroup(group.body, options);
 
 };
 
 groupTypes.phantom = function(group, options, prev) {
-    norm_str = norm_str + "\\phantom { ";
-    buildExpression(group.value.value, options);
-    norm_str = norm_str + "} ";
+    norm_str = norm_str + "\\phantom {";
+    buildExpression(group.value, options);
+    norm_str = norm_str + "}";
 
 };
 
@@ -383,8 +420,17 @@ var buildExpression = function(expression, options) {
  * on it to produce a MathML node.
  */
 var buildGroup = function(group, options) {
+    // console.error("group", group.type, group)
     if (groupTypes[group.type]) {
+        if ('loc' in group && group.loc.start != prev_end) {
+            norm_str += " "
+        }
+
         groupTypes[group.type](group, options);
+
+        if ('loc' in group) {
+            prev_end = group.loc.end
+        }
     } else {
         throw new ParseError(
             "Got group of unknown type: '" + group.type + "'");

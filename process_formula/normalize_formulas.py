@@ -95,6 +95,11 @@ class NormalizeFormula:
                 text=True,
                 check=True,
             )
+
+            if result.stderr != "":
+                if 'Undefined control sequence' not in result.stderr:
+                    print("ERROR:", result.stderr)
+
             return result.stdout.splitlines()
         except subprocess.CalledProcessError as e:
             print(f"Error occurred: {e.stderr}")
