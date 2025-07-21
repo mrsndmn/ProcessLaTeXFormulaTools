@@ -151,7 +151,7 @@ groupTypes.atom = function(group, options) {
     // if (atom_text === '\\@not') {
     //     atom_text = '\\neq'
     // }
-    norm_str = norm_str + atom_text + " ";
+    norm_str = norm_str + atom_text + " \\\\ ";
 };
 
 groupTypes.kern = function(group, options) {

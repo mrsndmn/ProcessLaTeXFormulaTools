@@ -7,10 +7,60 @@ import subprocess
 from pathlib import Path
 from typing import List, Sequence, Union
 
+latex_math_commands = [
+    # Greek letters
+    "\\alpha", "\\beta", "\\gamma", "\\delta", "\\epsilon", "\\varepsilon", "\\zeta", "\\eta", "\\theta", "\\vartheta", "\\iota", "\\kappa",
+    "\\lambda", "\\mu", "\\nu", "\\xi", "\\pi", "\\varpi", "\\rho", "\\varrho", "\\sigma", "\\varsigma", "\\tau", "\\upsilon", "\\phi", "\\varphi",
+    "\\chi", "\\psi", "\\omega",
+    "\\Gamma", "\\Delta", "\\Theta", "\\Lambda", "\\Xi", "\\Pi", "\\Sigma", "\\Upsilon", "\\Phi", "\\Psi", "\\Omega",
+
+    # Binary operators
+    "+", "-", "*", "/", "\\cdot", "\\times", "\\div", "\\pm", "\\mp", "\\cap", "\\cup", "\\sqcap", "\\sqcup",
+    "\\vee", "\\wedge", "\\oplus", "\\ominus", "\\otimes", "\\oslash", "\\odot",
+
+    # Relational operators
+    "=", "\\ne", "\\neq", "<", ">", "\\leq", "\\geq", "\\ll", "\\gg", "\\approx", "\\cong", "\\sim", "\\simeq", "\\equiv", "\\propto",
+    "\\prec", "\\succ", "\\subset", "\\supset", "\\subseteq", "\\supseteq", "\\nsubseteq", "\\nleq", "\\ngeq", "\\in", "\\ni", "\\notin",
+
+    # Arrows
+    "\\leftarrow", "\\rightarrow", "\\leftrightarrow", "\\Leftarrow", "\\Rightarrow", "\\Leftrightarrow",
+    "\\uparrow", "\\downarrow", "\\updownarrow", "\\longleftarrow", "\\longrightarrow", "\\Longleftarrow",
+    "\\Longrightarrow", "\\mapsto", "\\hookrightarrow", "\\to", "\\gets", "\\rightsquigarrow",
+
+    # Large operators
+    "\\sum", "\\prod", "\\coprod", "\\int", "\\iint", "\\iiint", "\\oint",
+    "\\bigcup", "\\bigcap", "\\bigsqcup", "\\bigvee", "\\bigwedge", "\\bigodot", "\\bigotimes", "\\bigoplus",
+    "\\lim", "\\limsup", "\\liminf", "\\sup", "\\inf", "\\max", "\\min",
+
+    # Delimiters
+    "\\langle", "\\rangle",
+    "\\lfloor", "\\rfloor", "\\lceil", "\\rceil", "\\left", "\\right",
+
+    # Accents & decorations
+    "\\bar", "\\hat", "\\tilde", "\\vec", "\\dot", "\\ddot", "\\breve", "\\check",
+    "\\overline", "\\underline", "\\overbrace", "\\underbrace",
+
+    # Special constants & symbols
+    "\\infty", "\\nabla", "\\partial", "\\forall", "\\exists", "\\Re", "\\Im", "\\top", "\\bot", "\\angle", "\\triangle",
+    "\\Box", "\\Diamond", "\\neg", "\\emptyset", "\\aleph", "\\hbar", "\\ell", "\\prime", "\\wp",
+
+    # Functions
+    "\\sin", "\\cos", "\\tan", "\\cot", "\\sec", "\\csc", "\\arcsin", "\\arccos", "\\arctan",
+    "\\sinh", "\\cosh", "\\tanh", "\\log", "\\ln", "\\exp", "\\max", "\\min", "\\sup", "\\inf",
+
+    # Logic
+    "\\land", "\\lor", "\\neg", "\\Rightarrow", "\\Leftarrow", "\\iff", "\\implies", "\\therefore", "\\because",
+
+    # Miscellaneous
+    "\\dots", "\\ldots", "\\cdots", "\\vdots", "\\ddots", "\\cases"
+]
+
 
 class NormalizeFormula:
     def __init__(self):
         self.root_dir = Path(__file__).resolve().parent
+        if not self.check_node():
+            raise NormalizeFormulaError("Node.js was not installed correctly!")
 
     def __call__(
         self,
@@ -26,14 +76,11 @@ class NormalizeFormula:
             for v in input_data
         ]
 
-        if not self.check_node():
-            raise NormalizeFormulaError("Node.js was not installed correctly!")
-
         # 借助KaTeX获得规范化后的公式
         normalized_formulas = self.get_normalize_formulas(after_content, mode)
 
         # 去除非ascii得字符
-        final_content = self.remove_invalid_symbols(normalized_formulas)
+        final_content = self.post_processing(normalized_formulas)
 
         if out_path is not None:
             self.write_txt(out_path, final_content)
@@ -97,8 +144,11 @@ class NormalizeFormula:
             )
 
             if result.stderr != "":
+                # print("result.stderr", result.stderr)
                 if 'Undefined control sequence' not in result.stderr:
                     print("ERROR:", result.stderr)
+
+            # print("result.stdout", result.stdout)
 
             return result.stdout.splitlines()
         except subprocess.CalledProcessError as e:
@@ -106,6 +156,14 @@ class NormalizeFormula:
             raise NormalizeFormulaError(
                 "Error occurred while normalizing formulas."
             ) from e
+
+    def post_processing(self, normalized_formulas: List[str]) -> List[str]:
+        valid_symbols_content = self.remove_invalid_symbols(normalized_formulas)
+        final_content = []
+        for content in valid_symbols_content:
+            final_content.append(content.replace(" ", ""))
+
+        return final_content
 
     def remove_invalid_symbols(self, normalized_formulas: List[str]) -> List[str]:
         final_content = []
