@@ -4442,6 +4442,11 @@ const symbols = {
 /** `acceptUnicodeChar = true` is only applicable if `replace` is set. */
 
 function defineSymbol(mode, font, group, replace, name, acceptUnicodeChar) {
+
+  if (name.startsWith('\\')) {
+    group = mathord;
+  }
+
   symbols[mode][name] = {
     font,
     group,
@@ -4917,14 +4922,14 @@ defineSymbol(math, main, bin, "\u2228", "\\lor");
 defineSymbol(math, main, bin, "\u2227", "\\wedge", true);
 defineSymbol(math, main, bin, "\u2228", "\\vee", true);
 defineSymbol(math, main, textord, "\u221a", "\\surd");
-defineSymbol(math, main, symbols_open, "\u27e8", "\\langle", true);
-defineSymbol(math, main, symbols_open, "\u2223", "\\lvert");
-defineSymbol(math, main, symbols_open, "\u2225", "\\lVert");
+defineSymbol(math, main, textord, "\u27e8", "\\langle", true);
+defineSymbol(math, main, textord, "\u2223", "\\lvert");
+defineSymbol(math, main, textord, "\u2225", "\\lVert");
 defineSymbol(math, main, symbols_close, "?", "?");
 defineSymbol(math, main, symbols_close, "!", "!");
-defineSymbol(math, main, symbols_close, "\u27e9", "\\rangle", true);
-defineSymbol(math, main, symbols_close, "\u2223", "\\rvert");
-defineSymbol(math, main, symbols_close, "\u2225", "\\rVert");
+defineSymbol(math, main, textord, "\u27e9", "\\rangle", true);
+defineSymbol(math, main, textord, "\u2223", "\\rvert");
+defineSymbol(math, main, textord, "\u2225", "\\rVert");
 defineSymbol(math, main, rel, "=", "=");
 defineSymbol(math, main, rel, ":", ":");
 defineSymbol(math, main, rel, "\u2248", "\\approx", true);
@@ -4971,7 +4976,7 @@ defineSymbol(math, ams, bin, "\u22bb", "\\veebar", true);
 defineSymbol(math, main, bin, "\u2299", "\\odot", true);
 defineSymbol(math, main, bin, "\u2295", "\\oplus", true);
 defineSymbol(math, main, bin, "\u2297", "\\otimes", true);
-defineSymbol(math, main, textord, "\u2202", "\\partial", true);
+defineSymbol(math, main, mathord, "\u2202", "\\partial", true);
 defineSymbol(math, main, bin, "\u2298", "\\oslash", true);
 defineSymbol(math, ams, bin, "\u229a", "\\circledcirc", true);
 defineSymbol(math, ams, bin, "\u22a1", "\\boxdot", true);

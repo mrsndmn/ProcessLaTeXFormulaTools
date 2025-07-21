@@ -7,8 +7,9 @@ normlizer = NormalizeFormula()
 
 
 math_str = [
-    ('\Delta z\sim1', '\Delta\\\\z\sim\\\\1'),
+    ('\\langle x', '\\langle\\\\x'),
 
+    ('\Delta z\sim1', '\Delta\\\\z\sim\\\\1'),
     ('1000', '1000'),
     ('\\nu t', '\\nu\\\\t'),
     # TODO numbers detokenization checkout!
@@ -33,7 +34,7 @@ math_str = [
 
 ]
 
-# math_str = math_str[:1]
+math_str = math_str[:1]
 
 errors = 0
 
