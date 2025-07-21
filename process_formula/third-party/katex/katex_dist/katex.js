@@ -4837,21 +4837,21 @@ defineSymbol(symbols_text, main, textord, "%", "\\%");
 defineSymbol(math, main, textord, "_", "\\_");
 defineSymbol(symbols_text, main, textord, "_", "\\_");
 defineSymbol(symbols_text, main, textord, "_", "\\textunderscore");
-defineSymbol(math, main, textord, "\u2220", "\\angle", true);
-defineSymbol(math, main, textord, "\u221e", "\\infty", true);
-defineSymbol(math, main, textord, "\u2032", "\\prime");
-defineSymbol(math, main, textord, "\u25b3", "\\triangle");
-defineSymbol(math, main, textord, "\u0393", "\\Gamma", true);
-defineSymbol(math, main, textord, "\u0394", "\\Delta", true);
-defineSymbol(math, main, textord, "\u0398", "\\Theta", true);
-defineSymbol(math, main, textord, "\u039b", "\\Lambda", true);
-defineSymbol(math, main, textord, "\u039e", "\\Xi", true);
-defineSymbol(math, main, textord, "\u03a0", "\\Pi", true);
-defineSymbol(math, main, textord, "\u03a3", "\\Sigma", true);
-defineSymbol(math, main, textord, "\u03a5", "\\Upsilon", true);
-defineSymbol(math, main, textord, "\u03a6", "\\Phi", true);
-defineSymbol(math, main, textord, "\u03a8", "\\Psi", true);
-defineSymbol(math, main, textord, "\u03a9", "\\Omega", true);
+defineSymbol(math, main, mathord, "\u2220", "\\angle", true);
+defineSymbol(math, main, mathord, "\u221e", "\\infty", true);
+defineSymbol(math, main, mathord, "\u2032", "\\prime");
+defineSymbol(math, main, mathord, "\u25b3", "\\triangle");
+defineSymbol(math, main, mathord, "\u0393", "\\Gamma", true);
+defineSymbol(math, main, mathord, "\u0394", "\\Delta", true);
+defineSymbol(math, main, mathord, "\u0398", "\\Theta", true);
+defineSymbol(math, main, mathord, "\u039b", "\\Lambda", true);
+defineSymbol(math, main, mathord, "\u039e", "\\Xi", true);
+defineSymbol(math, main, mathord, "\u03a0", "\\Pi", true);
+defineSymbol(math, main, mathord, "\u03a3", "\\Sigma", true);
+defineSymbol(math, main, mathord, "\u03a5", "\\Upsilon", true);
+defineSymbol(math, main, mathord, "\u03a6", "\\Phi", true);
+defineSymbol(math, main, mathord, "\u03a8", "\\Psi", true);
+defineSymbol(math, main, mathord, "\u03a9", "\\Omega", true);
 defineSymbol(math, main, textord, "A", "\u0391");
 defineSymbol(math, main, textord, "B", "\u0392");
 defineSymbol(math, main, textord, "E", "\u0395");
@@ -4948,6 +4948,10 @@ defineSymbol(math, main, rel, "\u2264", "\\leq", true);
 defineSymbol(math, main, rel, "<", "\\lt", true);
 defineSymbol(math, main, rel, "\u2192", "\\rightarrow", true);
 defineSymbol(math, main, rel, "\u2192", "\\to");
+defineSymbol(math, main, rel, "\u2192", "\\notin");
+defineSymbol(math, main, rel, "\u2192", "\\dots");
+defineSymbol(math, main, rel, "\u2192", "\\neq");
+
 defineSymbol(math, ams, rel, "\u2271", "\\ngeq", true);
 defineSymbol(math, ams, rel, "\u2270", "\\nleq", true);
 defineSymbol(math, main, spacing, "\u00a0", "\\ ");
@@ -10518,7 +10522,10 @@ function defineEnvironment(_ref) {
 const _macros = {}; // This function might one day accept an additional argument and do more things.
 
 function defineMacro(name, body) {
-  _macros[name] = body;
+  
+  defineSymbol(math, main, rel, "\u2192", name);
+
+  // _macros[name] = body;
 }
 ;// CONCATENATED MODULE: ./src/SourceLocation.js
 /**
@@ -16011,10 +16018,11 @@ defineMacro("\\not", '\\html@mathml{\\mathrel{\\mathrlap\\@not}}{\\char"338}'); 
 //   \notin{\mathrel{\m@th\mathpalette\c@ncel\in}}
 // \def\c@ncel#1#2{\m@th\ooalign{$\hfil#1\mkern1mu/\hfil$\crcr$#1#2$}}
 
-defineMacro("\\neq", "\\html@mathml{\\mathrel{\\not=}}{\\mathrel{\\char`≠}}");
+// defineMacro("\\neq", "\\html@mathml{\\mathrel{\\not=}}{\\mathrel{\\char`≠}}");
 defineMacro("\\ne", "\\neq");
 defineMacro("\u2260", "\\neq");
-defineMacro("\\notin", "\\html@mathml{\\mathrel{{\\in}\\mathllap{/\\mskip1mu}}}" + "{\\mathrel{\\char`∉}}");
+// defineMacro("\\notin", "\\notin");
+// defineMacro("\\notin", "\\html@mathml{\\mathrel{{\\in}\\mathllap{/\\mskip1mu}}}" + "{\\mathrel{\\char`∉}}");
 defineMacro("\u2209", "\\notin"); // Unicode stacked relations
 
 defineMacro("\u2258", "\\html@mathml{" + "\\mathrel{=\\kern{-1em}\\raisebox{0.4em}{$\\scriptsize\\frown$}}" + "}{\\mathrel{\\char`\u2258}}");
@@ -16139,27 +16147,27 @@ const dotsByToken = {
   // Symbols whose definition starts with \DOTSX:
   '\\DOTSX': '\\dotsx'
 };
-defineMacro("\\dots", function (context) {
-  // TODO: If used in text mode, should expand to \textellipsis.
-  // However, in KaTeX, \textellipsis and \ldots behave the same
-  // (in text mode), and it's unlikely we'd see any of the math commands
-  // that affect the behavior of \dots when in text mode.  So fine for now
-  // (until we support \ifmmode ... \else ... \fi).
-  let thedots = '\\dotso';
-  const next = context.expandAfterFuture().text;
+// defineMacro("\\dots", function (context) {
+//   // TODO: If used in text mode, should expand to \textellipsis.
+//   // However, in KaTeX, \textellipsis and \ldots behave the same
+//   // (in text mode), and it's unlikely we'd see any of the math commands
+//   // that affect the behavior of \dots when in text mode.  So fine for now
+//   // (until we support \ifmmode ... \else ... \fi).
+//   let thedots = '\\dotso';
+//   const next = context.expandAfterFuture().text;
 
-  if (next in dotsByToken) {
-    thedots = dotsByToken[next];
-  } else if (next.slice(0, 4) === '\\not') {
-    thedots = '\\dotsb';
-  } else if (next in src_symbols.math) {
-    if (utils.contains(['bin', 'rel'], src_symbols.math[next].group)) {
-      thedots = '\\dotsb';
-    }
-  }
+//   if (next in dotsByToken) {
+//     thedots = dotsByToken[next];
+//   } else if (next.slice(0, 4) === '\\not') {
+//     thedots = '\\dotsb';
+//   } else if (next in src_symbols.math) {
+//     if (utils.contains(['bin', 'rel'], src_symbols.math[next].group)) {
+//       thedots = '\\dotsb';
+//     }
+//   }
 
-  return thedots;
-});
+//   return thedots;
+// });
 const spaceAfterDots = {
   // \rightdelim@ checks for the following:
   ')': true,

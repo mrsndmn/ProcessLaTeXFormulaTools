@@ -57,9 +57,9 @@ latex_math_commands = [
 
 
 class NormalizeFormula:
-    def __init__(self):
+    def __init__(self, check_node: bool = True):
         self.root_dir = Path(__file__).resolve().parent
-        if not self.check_node():
+        if check_node and not self.check_node():
             raise NormalizeFormulaError("Node.js was not installed correctly!")
 
     def __call__(
@@ -134,6 +134,8 @@ class NormalizeFormula:
         latex_js_path = self.root_dir / "preprocess_latex.js"
         cmd = ["node", latex_js_path, mode]
 
+        # print("after_content", after_content)
+
         try:
             result = subprocess.run(
                 cmd,
@@ -148,7 +150,11 @@ class NormalizeFormula:
                 if 'Undefined control sequence' not in result.stderr:
                     print("ERROR:", result.stderr)
 
+            # TODO
             # print("result.stdout", result.stdout)
+            # print("result.stderr", result.stderr)
+            if 'FULL_TREE' in result.stdout:
+                print("result.stdout", result.stdout)
 
             return result.stdout.splitlines()
         except subprocess.CalledProcessError as e:
@@ -160,8 +166,36 @@ class NormalizeFormula:
     def post_processing(self, normalized_formulas: List[str]) -> List[str]:
         valid_symbols_content = self.remove_invalid_symbols(normalized_formulas)
         final_content = []
+
+        no_need_escape_after_symbol = [ '=', ',', '}', '{', '(', ')', '>', '<', '-', '+' ]
+
         for content in valid_symbols_content:
-            final_content.append(content.replace(" ", ""))
+            # print("content 1", content)
+            content = re.sub(r'(?<!\\)\s+(?!\\)', '', content)
+            content = re.sub(r'\\\s+(?!\\)', r'\\', content)
+            content = re.sub(r'(?<!\\)\s+\\', r'\\', content)
+            content = content.replace('\\\\\\', '\\')
+            content = content.removesuffix('\\\\')
+            content = content.replace('.\\\\.\\\\.\\\\', '...')
+            content = content.replace('\\mathrm\\\\{', '\\mathrm{')
+            content = content.replace('\\\\}', '}')
+            content = content.replace('\\\\)', ')')
+
+            # print("content 2", content)
+            # content = content.replace(" ", "")
+            #  {\operator\\} -> {\operator}
+            content = re.sub(r'\{\\([a-zA-Z]+)\\\\\}', r'{\\\1}', content)
+            content = re.sub(r'(?<!\\)\s*\\([a-zA-Z]+)\\\\(?![a-zA-Z0-9])', r'\\\1', content)
+
+            content = re.sub(r'(\\hspace{[^\\]+)\\\\([^}]+})', r'\1\2', content)
+
+            for symbol in no_need_escape_after_symbol:
+                content = content.replace(f'{symbol}\\\\', symbol)
+
+            content = content.replace('= \\', '=\\')
+            # print("content 3", content)
+
+            final_content.append(content)
 
         return final_content
 

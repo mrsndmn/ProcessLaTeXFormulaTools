@@ -25,19 +25,19 @@ rl.on('line', function(line){
         line = line.replace(/\\label{.*?}/, "");
     }
 
-    if (line.indexOf("matrix") == -1 && line.indexOf("cases")==-1 &&
-        line.indexOf("array")==-1 && line.indexOf("begin")==-1)  {
-        for (var i = 0; i < 300; i++) {
-            line = line.replace(/\\\\/, "\\,");
-        }
-    }
+    // if (line.indexOf("matrix") == -1 && line.indexOf("cases")==-1 &&
+    //     line.indexOf("array")==-1 && line.indexOf("begin")==-1)  {
+    //     for (var i = 0; i < 300; i++) {
+    //         line = line.replace(/\\\\/, "\\");
+    //     }
+    // }
 
 
-    line = line
+    line = line;
+    // console.log("LINE", line);
     // global_str is tokenized version (build in parser.js)
     // norm_str is normalized version build by renderer below.
     try {
-
         if (process.argv[2] == "tokenize") {
             var tree = katex.__parse(line, {throwOnError: true});
             console.log(global_str.replace(/\\label { .*? }/, ""));
@@ -52,7 +52,8 @@ rl.on('line', function(line){
             }
 
             var tree = katex.__parse(line, {throwOnError: true});
-            // console.log("tree", tree)
+            // TODO
+            // console.log("FULL_TREE", tree)
             buildExpression(tree, {});
             for (var i = 0; i < 300; ++i) {
                 norm_str = norm_str.replace('SSSSSS', '$');
@@ -83,6 +84,11 @@ prev_end = 0
 
 var groupTypes = {};
 
+groupTypes.cr = function(group, options) {
+    // do nothing
+}
+
+
 groupTypes.mathord = function(group, options) {
     if (options.font == "mathrm"){
         for (i = 0; i < group.length; ++i ) {
@@ -93,12 +99,18 @@ groupTypes.mathord = function(group, options) {
             }
         }
     } else {
-        norm_str = norm_str + group.text + " ";
+        suffix = ' '
+        if (group.text.startsWith('\\')) {
+            suffix = '\\\\'
+        }
+        norm_str = norm_str + group.text + suffix;
     }
 };
 
 groupTypes.textord = function(group, options) {
-    norm_str = norm_str + group.text;
+    // suffix = '\\\\'
+    suffix = ''
+    norm_str = norm_str + group.text + suffix;
 };
 
 groupTypes.htmlmathml = function(group, options) {
@@ -140,9 +152,14 @@ groupTypes.ordgroup = function(group, options) {
 
 groupTypes.text = function(group, options) {
 
-    norm_str = norm_str + "\\mathrm {";
+    // norm_str = norm_str + "\\text {";
+    norm_str = norm_str + group.font + '{';
 
-    buildExpression(group.body, options);
+    for (var i = 0; i < group.body.length; i++) {
+        norm_str = norm_str + group.body[i].text;
+    }
+
+    // buildExpression(group.body, options);
     norm_str = norm_str + "}";
 };
 
@@ -252,16 +269,19 @@ groupTypes.sqrt = function(group, options) {
         norm_str = norm_str + "\\sqrt [" + group.index + "]";
         buildGroup(group.body, options);
     } else {
-        norm_str = norm_str + "\\sqrt ";
+        norm_str = norm_str + "\\sqrt\\\\";
         buildGroup(group.body, options);
     }
 };
 
 groupTypes.leftright = function(group, options) {
 
+    suffix = ''
+    if (group.left.startsWith('\\')) {
+        suffix = '\\\\'
+    }
 
-
-    norm_str = norm_str + "\\left" + group.left;
+    norm_str = norm_str + "\\left" + group.left + suffix;
     buildExpression(group.body, options);
     norm_str = norm_str + "\\right" + group.right;
 };
@@ -282,14 +302,23 @@ groupTypes.spacing = function(group) {
     if (group.text == " ") {
         norm_str = norm_str + "~ ";
     } else {
-        norm_str = norm_str + group.text;
+        suffix = ''
+        if (group.text.startsWith('\\')) {
+            suffix = '\\\\'
+        }
+
+        norm_str = norm_str + group.text + suffix;
     }
     return node;
 };
 
 groupTypes.op = function(group, options) {
     if (typeof(group.name) !== 'undefined') {
-        norm_str = norm_str + group.name + " ";
+        suffix = ' '
+        if (group.name.startsWith('\\')) {
+            suffix = '\\\\'
+        }
+        norm_str = norm_str + group.name + suffix;
     } else {
         buildExpression(group.body, options)
     }
@@ -331,7 +360,7 @@ groupTypes.font = function(group, options) {
     if (font == "mbox" || font == "hbox") {
         font = "mathrm";
     }
-    norm_str = norm_str + "\\" + font;
+    norm_str = norm_str + "\\" + font + '\\\\';
     buildGroup(group.body, options);
 };
 
@@ -408,6 +437,7 @@ var buildExpression = function(expression, options) {
     var groups = [];
     for (var i = 0; i < expression.length; i++) {
         var group = expression[i];
+        // console.log("group", i, group)
         buildGroup(group, options);
     }
     // console.log(norm_str);
@@ -431,7 +461,7 @@ var buildGroup = function(group, options) {
             prev_end = group.loc.end
         }
     } else {
-        throw new ParseError(
+        throw new Error(
             "Got group of unknown type: '" + group.type + "'");
     }
 };
