@@ -156,7 +156,11 @@ groupTypes.text = function(group, options) {
     norm_str = norm_str + group.font + '{';
 
     for (var i = 0; i < group.body.length; i++) {
-        norm_str = norm_str + group.body[i].text;
+        if (typeof(group.body[i].text) !== 'undefined') {
+            norm_str = norm_str + group.body[i].text;
+        } else {
+            buildGroup(group.body[i], options);
+        }
     }
 
     // buildExpression(group.body, options);
@@ -366,7 +370,7 @@ groupTypes.font = function(group, options) {
 
 groupTypes.delimsizing = function(group) {
     var children = [];
-    norm_str = norm_str + group.delim;
+    norm_str = norm_str + group.delim + '\\\\';
 };
 
 groupTypes.styling = function(group, options) {

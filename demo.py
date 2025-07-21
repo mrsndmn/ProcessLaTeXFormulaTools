@@ -7,7 +7,11 @@ normlizer = NormalizeFormula()
 
 
 math_str = [
-    ('\\langle x', '\\langle\\\\x'),
+    ('\\text { \\emph { Recall } } =TP / ( TP+FN ) ', '\\text{\\emph{Recall}}=TP/(TP+FN)'),
+
+    ('x \sim 19.6-21.1', 'x\sim\\\\19.6-21.1'),
+    ('\\emph { \\text { FFNN } }', '\\emph{\\text{FFNN}}'),
+    ('\\bigl\langle x \\big| \hat { f } \\big| y\\bigr\\rangle', '\\langle\\\\x|\\hat{f}|y\\rangle'),
 
     ('\Delta z\sim1', '\Delta\\\\z\sim\\\\1'),
     ('1000', '1000'),
@@ -15,7 +19,7 @@ math_str = [
     # TODO numbers detokenization checkout!
     ('\\hskip 5mm', '\\hspace{5mm}'),
     ('\\left\\langle x\\right\\rangle', '\\left\\langle\\\\x\\right\\rangle'),
-    ("\\underset { \\xi\\in \\Xi^0 } { \\max } \\ : f ( \\xi ) ", "\\max_{\\xi\\in \\Xi^{0}}\ \\\\:\\\\f( \\xi) "),
+    ("\\underset { \\xi\\in \\Xi^0 } { \\max } \\ : f ( \\xi ) ", "\\max_{\\xi\\in\\Xi^{0}}\ \\\\:\\\\f(\\xi) "),
     ('\\sqrt T', '\\sqrt\\\\T'),
     ("\\sum_i^n i = \\frac{n(n+1)}{2}", "\\sum_{i}^{n}i=\\frac{n(n+1)}{2}"),
     ('\lim_{x\\to\\\\0} \\frac{1}{x} = \infty', '\lim_{x\\to\\\\0}\\frac{1}{x}=\infty'),
