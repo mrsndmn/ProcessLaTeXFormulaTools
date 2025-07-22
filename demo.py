@@ -8,8 +8,7 @@ normlizer = NormalizeFormula()
 
 
 math_str = [
-    ('\\lim x', '\\lim{x}'),
-    ('\\sum x', '\\sum{x}'),
+    ('in 58', 'in\\\\58'),
 
     ('\\sqrt T', '\\sqrt{T}'),
     ('i\\sqrt 2 \\sqrt {2 + 3}', 'i\\sqrt{2}\\sqrt{2+3}'),
@@ -59,7 +58,7 @@ math_str = [
     # ('\\Phi_r ( \\underline\\ X )', '\\Phi_r(\\underline{X})'),
 ]
 
-math_str = math_str[:1]
+# math_str = math_str[:1]
 
 errors = 0
 
