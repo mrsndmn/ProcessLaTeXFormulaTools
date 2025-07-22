@@ -72,7 +72,7 @@ class NormalizeFormula:
 
         # 将hskip 替换为hspace{}
         after_content = [
-            self.replace_hskip_to_hspace(str(v)).replace("\r", " ").strip()
+            self.preprocessing(str(v)).replace("\r", " ").strip()
             for v in input_data
         ]
 
@@ -107,10 +107,14 @@ class NormalizeFormula:
             return True
         return False
 
-    def replace_hskip_to_hspace(self, input_string: str) -> str:
+    def preprocessing(self, input_string: str) -> str:
         pattern = r"hskip(.*?)(cm|in|pt|mm|em)"
         replacement = r"hspace{\1\2}"
+
         output_string = re.sub(pattern, replacement, input_string)
+        output_string = re.sub(r'(?<!\\)\\\s+([\{\}])', r'\1', output_string)
+        output_string = re.sub(r'\\\s+%', r'\\%', output_string)
+
         return output_string
 
     @staticmethod
@@ -151,7 +155,6 @@ class NormalizeFormula:
                     print("ERROR:", result.stderr)
 
             # TODO
-            # print("result.stdout", result.stdout)
             # print("result.stderr", result.stderr)
             if 'FULL_TREE' in result.stdout:
                 print("result.stdout", result.stdout)
@@ -167,9 +170,13 @@ class NormalizeFormula:
         valid_symbols_content = self.remove_invalid_symbols(normalized_formulas)
         final_content = []
 
-        no_need_escape_after_symbol = [ '=', ',', '}', '{', '(', ')', '>', '<', '-', '+', '|']
+        no_need_escape_after_symbol = [ '=', ',', '}', '{', '(', ')', '>', '<', '-', '+', '|', '%']
 
         for content in valid_symbols_content:
+            # print("content 1", content)
+
+            content = re.sub(r'([a-zA-Z])\s{2,}([a-zA-Z])', r'\1\\\\\2', content)
+
             content = re.sub(r'(?<!\\)\s+(?!\\)', '', content)
             content = re.sub(r'\\\s+(?!\\)', r'\\', content)
             content = re.sub(r'(?<!\\)\s+\\', r'\\', content)
@@ -192,7 +199,17 @@ class NormalizeFormula:
                 content = content.replace(f'{symbol}\\\\', symbol)
 
             content = content.replace('= \\', '=\\')
+            content = content.replace('\\\\=', '=')
             # print("content 3", content)
+
+            content = re.sub(r'(?<!\\)\s+(?!\\)', '', content)
+            content = re.sub(r'\\\s+(?!\\)', r'\\', content)
+            content = re.sub(r'(?<!\\)\s+\\', r'\\', content)
+
+            for chars_to_no_spaces_escape in [ ',', '!' ]:
+                content = re.sub(r'(?<!\\)\\\s+\\\\' + chars_to_no_spaces_escape, r'\\' + chars_to_no_spaces_escape, content)
+                content = re.sub(r'(?<!\\)\\\\\s+\\' + chars_to_no_spaces_escape, r'\\' + chars_to_no_spaces_escape, content)
+
 
             final_content.append(content)
 
@@ -201,15 +218,18 @@ class NormalizeFormula:
     def remove_invalid_symbols(self, normalized_formulas: List[str]) -> List[str]:
         final_content = []
         for content in normalized_formulas:
-            tokens = content.strip().split()
+            tokens = content.strip()
             tokens_out = [t for t in tokens if self.is_ascii(t)]
-            tokens_str = " ".join(tokens_out)
+            tokens_str = "".join(tokens_out)
 
             final_content.append(tokens_str)
+
         return final_content
 
     @staticmethod
     def is_ascii(txt: str) -> bool:
+        if txt == ' ':
+            return True
         try:
             txt.encode("ascii").decode("ascii")
             return True

@@ -15503,10 +15503,9 @@ class Lexer {
     this.settings = settings;
     this.tokenRegex = new RegExp(tokenRegexString, 'g');
     this.catcodes = {
-      "%": 14,
+      // "%": 14,
       // comment character
-      "~": 13 // active character
-
+      // "~": 13 // active character
     };
   }
 
@@ -15534,7 +15533,7 @@ class Lexer {
 
     const text = match[6] || match[3] || (match[2] ? "\\ " : " ");
 
-    if (this.catcodes[text] === 14) {
+    if (false && this.catcodes[text] === 14) {
       // comment character
       const nlIndex = input.indexOf('\n', this.tokenRegex.lastIndex);
 
@@ -18497,14 +18496,14 @@ class Parser {
 
 
   parseUrlGroup(optional) {
-    this.gullet.lexer.setCatcode("%", 13); // active character
+    // this.gullet.lexer.setCatcoxde("%", 13); // active character
 
-    this.gullet.lexer.setCatcode("~", 12); // other character
+    // this.gullet.lexer.setCatcode("~", 12); // other character
 
     const res = this.parseStringGroup("url", optional);
-    this.gullet.lexer.setCatcode("%", 14); // comment character
+    // this.gullet.lexer.setCatcode("%", 14); // comment character
 
-    this.gullet.lexer.setCatcode("~", 13); // active character
+    // this.gullet.lexer.setCatcode("~", 13); // active character
 
     if (res == null) {
       return null;

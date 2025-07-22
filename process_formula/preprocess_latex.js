@@ -15,7 +15,7 @@ rl.on('line', function(line){
     if (line[0] == "%") {
         line = line.substr(1, line.length - 1);
     }
-    line = line.split('%')[0];
+    // line = line.split('%')[0];
 
     line = line.split('\\~').join(' ');
 
