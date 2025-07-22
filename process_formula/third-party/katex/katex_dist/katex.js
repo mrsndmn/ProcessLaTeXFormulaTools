@@ -4480,6 +4480,7 @@ const textord = "textord"; // Now comes the symbol table
 // Relation Symbols
 
 defineSymbol(math, main, rel, "\u2261", "\\equiv", true);
+defineSymbol(math, main, rel, "\u2261", "\\\\", true);
 defineSymbol(math, main, rel, "\u227a", "\\prec", true);
 defineSymbol(math, main, rel, "\u227b", "\\succ", true);
 defineSymbol(math, main, rel, "\u223c", "\\sim", true);
@@ -8752,7 +8753,8 @@ defineFunction({
   props: {
     numArgs: 0,
     numOptionalArgs: 0,
-    allowedInText: true
+    allowedInText: true,
+    allowedInArgument: true,
   },
 
   handler(_ref, args, optArgs) {
@@ -18194,6 +18196,9 @@ class Parser {
     this.consume(); // consume command token
 
     if (name && name !== "atom" && !funcData.allowedInArgument) {
+      console.log("func", func)
+      console.log("funcData", funcData)
+
       throw new src_ParseError("Got function '" + func + "' with no arguments" + (name ? " as " + name : ""), token);
     } else if (this.mode === "text" && !funcData.allowedInText) {
       throw new src_ParseError("Can't use function '" + func + "' in text mode", token);

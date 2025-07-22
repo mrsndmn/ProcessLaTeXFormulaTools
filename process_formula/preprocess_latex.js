@@ -273,8 +273,16 @@ groupTypes.sqrt = function(group, options) {
         norm_str = norm_str + "\\sqrt [" + group.index + "]";
         buildGroup(group.body, options);
     } else {
-        norm_str = norm_str + "\\sqrt\\\\";
-        buildGroup(group.body, options);
+        norm_str = norm_str + "\\sqrt";
+        sqrt_body = group.body
+        if (sqrt_body.type !== 'ordgroup') {
+            sqrt_body = {
+                type: 'ordgroup',
+                mode: 'math',
+                body: [sqrt_body]
+            }
+        }
+        buildGroup(sqrt_body, options);
     }
 };
 

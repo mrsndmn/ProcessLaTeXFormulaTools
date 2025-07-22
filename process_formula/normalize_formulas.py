@@ -150,6 +150,7 @@ class NormalizeFormula:
             )
 
             if result.stderr != "":
+                # print("result.stdout", result.stdout)
                 # print("result.stderr", result.stderr)
                 if 'Undefined control sequence' not in result.stderr:
                     print("ERROR:", result.stderr)
@@ -210,6 +211,7 @@ class NormalizeFormula:
                 content = re.sub(r'(?<!\\)\\\s+\\\\' + chars_to_no_spaces_escape, r'\\' + chars_to_no_spaces_escape, content)
                 content = re.sub(r'(?<!\\)\\\\\s+\\' + chars_to_no_spaces_escape, r'\\' + chars_to_no_spaces_escape, content)
 
+            content  = content.replace('{\\}', '\\')
 
             final_content.append(content)
 

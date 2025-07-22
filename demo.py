@@ -8,6 +8,14 @@ normlizer = NormalizeFormula()
 
 
 math_str = [
+    ('\\lim x', '\\lim{x}'),
+    ('\\sum x', '\\sum{x}'),
+
+    ('\\sqrt T', '\\sqrt{T}'),
+    ('i\\sqrt 2 \\sqrt {2 + 3}', 'i\\sqrt{2}\\sqrt{2+3}'),
+
+    ('\\ , \\ , \\=\\ , \\ ,', '\\,\\,\\=\\,\\,'),
+
     ('\\ \\rm', '\\ \\mathrm{}'),
     ("\\underset { \\xi\\in \\Xi^0 } { \\max } \\ : f ( \\xi ) ", "\\max_{\\xi\\in\\Xi^{0}}\ \\\\:\\\\f(\\xi) "),
 
@@ -33,9 +41,8 @@ math_str = [
     # TODO numbers detokenization checkout!
     ('\\hskip 5mm', '\\hspace{5mm}'),
     ('\\left\\langle x\\right\\rangle', '\\left\\langle\\\\x\\right\\rangle'),
-    ('\\sqrt T', '\\sqrt\\\\T'),
     ("\\sum_i^n i = \\frac{n(n+1)}{2}", "\\sum_{i}^{n}i=\\frac{n(n+1)}{2}"),
-    ('\lim_{x\\to\\\\0} \\frac{1}{x} = \infty', '\lim_{x\\to\\\\0}\\frac{1}{x}=\infty'),
+    ('\lim_{x\\to\\\\0} \\frac{1}{x} = \infty', '\\lim_{x\\to\\\\0}\\frac{1}{x}=\infty'),
     ('x\\to\\\\0', 'x\\to\\\\0'),
     ('\\textrm { PXP }', '\\textrm{PXP}'),
     ('ball~wrt', 'ball~\\\\wrt'),
@@ -48,9 +55,11 @@ math_str = [
     ('\\text { tractrix }', '\\text{tractrix}'),
     ('\mathcal { F }', '\mathcal\\\\F'),
 
+    # Bad sample
+    # ('\\Phi_r ( \\underline\\ X )', '\\Phi_r(\\underline{X})'),
 ]
 
-# math_str = math_str[:1]
+math_str = math_str[:1]
 
 errors = 0
 
