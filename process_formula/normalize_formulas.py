@@ -170,7 +170,7 @@ class NormalizeFormula:
         valid_symbols_content = self.remove_invalid_symbols(normalized_formulas)
         final_content = []
 
-        no_need_escape_after_symbol = [ '=', ',', '}', '{', '(', ')', '>', '<', '-', '+', '|', '%']
+        no_need_escape_after_symbol = [ '=', '=:', ',', '}', '{', '(', ')', '>', '<', '-', '+', '|', '%']
 
         for content in valid_symbols_content:
             # print("content 1", content)
